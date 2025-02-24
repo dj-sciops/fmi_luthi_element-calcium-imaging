@@ -257,11 +257,12 @@ class FieldMotionCorrection(dj.Computed):
                 mc_indices = params.pop(
                     "indices"
                 )  # Indices that restrict FOV for motion correction.
-                mc_indices = slice(*mc_indices[0]), slice(*mc_indices[1])
                 params["motion"] = {
                     **params.get("motion", {}),
-                    "indices": mc_indices,
+                    "indices": (slice(*mc_indices[0]), slice(*mc_indices[1])),
                 }
+            else:
+                mc_indices = None
 
             output_dir = output_dir / "motion_correction"
             output_dir.mkdir(parents=True, exist_ok=True)
@@ -354,6 +355,10 @@ class FieldMotionCorrection(dj.Computed):
                 f.relative_to(processed_root_data_dir).as_posix() for f in file_paths
             ]
             params["extra_dj_params"] = extra_dj_params
+
+            if mc_indices is not None:
+                # store "indices" in params as tuple instead of the `slice` object
+                params["motion"]["indices"] = mc_indices
 
         else:
             raise NotImplementedError(
