@@ -3,7 +3,7 @@ import inspect
 import shutil
 import pathlib
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 import os
 
@@ -82,7 +82,7 @@ class PreProcessing(dj.Computed):
         return ks - imaging.Processing.proj()
 
     def make(self, key):
-        execution_time = datetime.utcnow()
+        execution_time = datetime.now(timezone.utc)
         processed_root_data_dir = scan.get_processed_root_data_dir()
 
         output_dir = (imaging.ProcessingTask & key).fetch1("processing_output_dir")
@@ -180,7 +180,7 @@ class PreProcessing(dj.Computed):
                 f"Field processing for {acq_software} scans with {method} is not yet supported in this table."
             )
 
-        exec_dur = (datetime.utcnow() - execution_time).total_seconds() / 3600
+        exec_dur = (datetime.now(timezone.utc) - execution_time).total_seconds() / 3600
         self.insert1(
             {
                 **key,
@@ -202,7 +202,7 @@ class FieldMotionCorrection(dj.Computed):
     """
 
     def make(self, key):
-        execution_time = datetime.utcnow()
+        execution_time = datetime.now(timezone.utc)
         processed_root_data_dir = scan.get_processed_root_data_dir()
 
         output_dir, params = (PreProcessing.Field & key).fetch1(
@@ -365,7 +365,7 @@ class FieldMotionCorrection(dj.Computed):
                 f"Field motion correction for {acq_software} scans with {method} is not yet supported in this table."
             )
 
-        exec_dur = (datetime.utcnow() - execution_time).total_seconds() / 3600
+        exec_dur = (datetime.now(timezone.utc) - execution_time).total_seconds() / 3600
         self.insert1(
             {
                 **key,
@@ -386,7 +386,7 @@ class FieldSegmentation(dj.Computed):
     """
 
     def make(self, key):
-        execution_time = datetime.utcnow()
+        execution_time = datetime.now(timezone.utc)
         processed_root_data_dir = scan.get_processed_root_data_dir()
 
         output_dir, params = (
@@ -431,8 +431,8 @@ class FieldSegmentation(dj.Computed):
                 output_directory=output_dir,
             )
             def _run_segmentation():
-                # use 80% of available cores
-                n_processes = int(np.floor(multiprocessing.cpu_count() * 0.8))
+                # use 30% of available cores
+                n_processes = int(np.floor(multiprocessing.cpu_count() * 0.3))
                 _, dview, n_processes = cm.cluster.setup_cluster(
                     backend="multiprocessing", n_processes=n_processes
                 )
@@ -523,7 +523,7 @@ class FieldSegmentation(dj.Computed):
                 f"Field Segmentation for {acq_software} scans with {method} is not yet supported in this table."
             )
 
-        exec_dur = (datetime.utcnow() - execution_time).total_seconds() / 3600
+        exec_dur = (datetime.now(timezone.utc) - execution_time).total_seconds() / 3600
         self.insert1(
             {
                 **key,
@@ -563,12 +563,14 @@ class PostProcessing(dj.Computed):
         return PreProcessing & per_plane_proc
 
     def make(self, key):
-        execution_time = datetime.utcnow()
-        method, params = (
+        execution_time = datetime.now(timezone.utc)
+        output_dir, method, params = (
             imaging.ProcessingTask * imaging.ProcessingParamSet & key
-        ).fetch1("processing_method", "params")
+        ).fetch1("processing_output_dir", "processing_method", "params")
 
-        exec_dur = (datetime.utcnow() - execution_time).total_seconds() / 3600
+        output_dir = find_full_path(scan.get_processed_root_data_dir(), output_dir)
+
+        exec_dur = (datetime.now(timezone.utc) - execution_time).total_seconds() / 3600
         self.insert1(
             {
                 **key,
@@ -579,8 +581,19 @@ class PostProcessing(dj.Computed):
         imaging.Processing.insert1(
             {
                 **key,
-                "processing_time": datetime.utcnow(),
+                "processing_time": datetime.now(timezone.utc),
                 "package_version": "",
             },
             allow_direct_insert=True,
+        )
+        imaging.Processing.File.insert(
+            [
+                {
+                    **key,
+                    "file_name": f.relative_to(output_dir).as_posix(),
+                    "file": f,
+                }
+                for f in output_dir.rglob("*")
+                if f.is_file()
+            ], allow_direct_insert=True
         )
