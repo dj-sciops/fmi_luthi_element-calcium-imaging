@@ -210,8 +210,8 @@ class PreProcessing(dj.Computed):
                         "file": f,
                     }
                 )
-        logger.info("Inserting %d file entries...", len(file_entries))
-        self.File.insert(file_entries)
+        # logger.info("Inserting %d file entries...", len(file_entries))
+        # self.File.insert(file_entries)
 
 
 @schema
@@ -390,17 +390,17 @@ class FieldMotionCorrection(dj.Computed):
                 "mc_params": params,
             }
         )
-        self.File.insert(
-            [
-                {
-                    **key,
-                    "file_name": f.relative_to(output_dir.parent).as_posix(),
-                    "file": f,
-                }
-                for f in output_dir.rglob("*")
-                if f.is_file()
-            ]
-        )
+        # self.File.insert(
+        #     [
+        #         {
+        #             **key,
+        #             "file_name": f.relative_to(output_dir.parent).as_posix(),
+        #             "file": f,
+        #         }
+        #         for f in output_dir.rglob("*")
+        #         if f.is_file()
+        #     ]
+        # )
 
 
 @schema
@@ -574,17 +574,17 @@ class FieldSegmentation(dj.Computed):
                 "execution_duration": exec_dur,
             }
         )
-        self.File.insert(
-            [
-                {
-                    **key,
-                    "file_name": f.relative_to(output_dir.parent).as_posix(),
-                    "file": f,
-                }
-                for f in output_dir.rglob("*")
-                if f.is_file()
-            ]
-        )
+        # self.File.insert(
+        #     [
+        #         {
+        #             **key,
+        #             "file_name": f.relative_to(output_dir.parent).as_posix(),
+        #             "file": f,
+        #         }
+        #         for f in output_dir.rglob("*")
+        #         if f.is_file()
+        #     ]
+        # )
 
 
 @schema
