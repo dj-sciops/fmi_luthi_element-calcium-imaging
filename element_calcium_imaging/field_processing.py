@@ -305,7 +305,8 @@ class FieldMotionCorrection(dj.Computed):
                 os.environ["CAIMAN_TEMP"] = str(output_dir)
 
                 # use 60% of available cores (this step should be low memory)
-                n_processes = int(np.floor(multiprocessing.cpu_count() * 0.6))
+                n_processes = np.floor(multiprocessing.cpu_count() * 0.6)
+                n_processes = int(os.getenv("CAIMAN_MC_N_PROCESSES", n_processes))
                 _, dview, n_processes = cm.cluster.setup_cluster(
                     backend="multiprocessing",
                     n_processes=n_processes,
@@ -461,8 +462,9 @@ class FieldSegmentation(dj.Computed):
                 output_directory=output_dir,
             )
             def _run_segmentation():
-                # very memory-intensive step, use 5% of available cores only
-                n_processes = int(np.floor(multiprocessing.cpu_count() * 0.05))
+                # very memory-intensive step, use 10% of available cores only
+                n_processes = np.floor(multiprocessing.cpu_count() * 0.1)
+                n_processes = int(os.getenv("CAIMAN_CNMF_N_PROCESSES", n_processes))
                 _, dview, n_processes = cm.cluster.setup_cluster(
                     backend="multiprocessing",
                     n_processes=n_processes,
