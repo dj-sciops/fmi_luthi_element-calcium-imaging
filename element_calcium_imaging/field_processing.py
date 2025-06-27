@@ -364,21 +364,19 @@ class FieldMotionCorrection(dj.Computed):
                     "cnmf_mc_output_file": cnmf_mc_output_file.relative_to(
                         processed_root_data_dir
                     ).as_posix(),
-                    "mc_results": mc_results,
                 }
+                pickle.dump(
+                    mc_results,
+                    output_dir
+                    / f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl",
+                )
                 return extra_dj_params
 
             extra_dj_params = _run_motion_correction()
             params["fnames"] = [
                 f.relative_to(processed_root_data_dir).as_posix() for f in file_paths
             ]
-            motion_correction_results = extra_dj_params.pop("mc_results")
             params["extra_dj_params"] = extra_dj_params
-            pickle.dump(
-                motion_correction_results,
-                output_dir
-                / f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl",
-            )
 
             if mc_indices is not None:
                 # store "indices" in params as tuple instead of the `slice` object
