@@ -372,8 +372,14 @@ class FieldMotionCorrection(dj.Computed):
             params["fnames"] = [
                 f.relative_to(processed_root_data_dir).as_posix() for f in file_paths
             ]
-            pickle.dump(extra_dj_params, output_dir / f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl")
-            
+            motion_correction_results = extra_dj_params.pop("mc_results")
+            params["extra_dj_params"] = extra_dj_params
+            pickle.dump(
+                motion_correction_results,
+                output_dir
+                / f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl",
+            )
+
             if mc_indices is not None:
                 # store "indices" in params as tuple instead of the `slice` object
                 params["motion"]["indices"] = mc_indices
@@ -399,7 +405,9 @@ class FieldMotionCorrection(dj.Computed):
                     "file_name": f.relative_to(output_dir.parent).as_posix(),
                     "file": f,
                 }
-                for f in output_dir.rglob(f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl")
+                for f in output_dir.rglob(
+                    f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
+                )
                 if f.is_file()
             ]
         )
@@ -447,7 +455,10 @@ class FieldSegmentation(dj.Computed):
             from caiman.source_extraction.cnmf.cnmf import CNMF, load_CNMF
             from caiman.source_extraction.cnmf.params import CNMFParams
 
-            mc_results = pickle.load(output_dir / f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl")
+            mc_results = pickle.load(
+                output_dir
+                / f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
+            )
             cnmf_mc_output_file = find_full_path(
                 processed_root_data_dir, extra_dj_params["cnmf_mc_output_file"]
             )
