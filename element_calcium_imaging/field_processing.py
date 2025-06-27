@@ -2,6 +2,7 @@ import importlib
 import inspect
 import shutil
 import pathlib
+import pickle
 from collections.abc import Callable
 from datetime import datetime, timezone
 import re
@@ -363,8 +364,12 @@ class FieldMotionCorrection(dj.Computed):
                     "cnmf_mc_output_file": cnmf_mc_output_file.relative_to(
                         processed_root_data_dir
                     ).as_posix(),
-                    "mc_results": mc_results,
                 }
+                pickle.dump(
+                    mc_results,
+                    output_dir
+                    / f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl",
+                )
                 return extra_dj_params
 
             extra_dj_params = _run_motion_correction()
@@ -390,17 +395,20 @@ class FieldMotionCorrection(dj.Computed):
                 "mc_params": params,
             }
         )
-        # self.File.insert(
-        #     [
-        #         {
-        #             **key,
-        #             "file_name": f.relative_to(output_dir.parent).as_posix(),
-        #             "file": f,
-        #         }
-        #         for f in output_dir.rglob("*")
-        #         if f.is_file()
-        #     ]
-        # )
+
+        self.File.insert(
+            [
+                {
+                    **key,
+                    "file_name": f.relative_to(output_dir.parent).as_posix(),
+                    "file": f,
+                }
+                for f in output_dir.rglob(
+                    f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
+                )
+                if f.is_file()
+            ]
+        )
 
 
 @schema
@@ -445,7 +453,10 @@ class FieldSegmentation(dj.Computed):
             from caiman.source_extraction.cnmf.cnmf import CNMF, load_CNMF
             from caiman.source_extraction.cnmf.params import CNMFParams
 
-            mc_results = extra_dj_params.pop("mc_results", {})
+            mc_results = pickle.load(
+                output_dir
+                / f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
+            )
             cnmf_mc_output_file = find_full_path(
                 processed_root_data_dir, extra_dj_params["cnmf_mc_output_file"]
             )
