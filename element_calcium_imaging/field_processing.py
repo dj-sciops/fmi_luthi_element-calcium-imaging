@@ -368,7 +368,7 @@ class FieldMotionCorrection(dj.Computed):
                 pickle.dump(
                     mc_results,
                     output_dir
-                    / f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl",
+                    / f"{key['subject']}_session{key['session_id']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl",
                 )
                 return extra_dj_params
 
@@ -404,7 +404,7 @@ class FieldMotionCorrection(dj.Computed):
                     "file": f,
                 }
                 for f in output_dir.rglob(
-                    f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
+                    f"{key['subject']}_session{key['session_id']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
                 )
                 if f.is_file()
             ]
@@ -455,7 +455,7 @@ class FieldSegmentation(dj.Computed):
 
             mc_results = pickle.load(
                 output_dir
-                / f"{key['subject']}_session{key['session']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
+                / f"{key['subject']}_session{key['session_id']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
             )
             cnmf_mc_output_file = find_full_path(
                 processed_root_data_dir, extra_dj_params["cnmf_mc_output_file"]
