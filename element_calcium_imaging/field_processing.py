@@ -365,11 +365,9 @@ class FieldMotionCorrection(dj.Computed):
                         processed_root_data_dir
                     ).as_posix(),
                 }
-                pickle.dump(
-                    mc_results,
-                    output_dir
-                    / f"{key['subject']}_session{key['session_id']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl",
-                )
+                mc_pickle_filepath = output_dir / f"{key['subject']}_session{key['session_id']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
+                with open(mc_pickle_filepath, "wb") as f:
+                    pickle.dump(mc_results, f)
                 return extra_dj_params
 
             extra_dj_params = _run_motion_correction()
@@ -453,10 +451,10 @@ class FieldSegmentation(dj.Computed):
             from caiman.source_extraction.cnmf.cnmf import CNMF, load_CNMF
             from caiman.source_extraction.cnmf.params import CNMFParams
 
-            mc_results = pickle.load(
-                output_dir
-                / f"{key['subject']}_session{key['session_id']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
-            )
+            mc_pickle_filepath = output_dir / f"{key['subject']}_session{key['session_id']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
+            with open(mc_pickle_filepath, "rb") as f:
+                mc_results = pickle.load(f)
+
             cnmf_mc_output_file = find_full_path(
                 processed_root_data_dir, extra_dj_params["cnmf_mc_output_file"]
             )
