@@ -451,7 +451,7 @@ class FieldSegmentation(dj.Computed):
             from caiman.source_extraction.cnmf.cnmf import CNMF, load_CNMF
             from caiman.source_extraction.cnmf.params import CNMFParams
 
-            mc_pickle_filepath = output_dir / f"{key['subject']}_session{key['session_id']}_params{key['paramset_idx']}_field{key['field_idx']}_motion_correction_results.pkl"
+            mc_pickle_filepath = next(output_dir.rglob("*motion_correction_results.pkl"))
             with open(mc_pickle_filepath, "rb") as f:
                 mc_results = pickle.load(f)
 
