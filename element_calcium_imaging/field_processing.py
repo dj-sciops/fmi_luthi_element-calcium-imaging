@@ -655,15 +655,14 @@ class PostProcessing(dj.Computed):
             },
             allow_direct_insert=True,
         )
-        imaging.Processing.File.insert(
-            [
+        for f in output_dir.rglob("*"):
+            if not f.is_file():
+                continue
+            imaging.Processing.File.insert1(
                 {
                     **key,
                     "file_name": f.relative_to(output_dir).as_posix(),
                     "file": f,
-                }
-                for f in output_dir.rglob("*")
-                if f.is_file()
-            ],
-            allow_direct_insert=True,
-        )
+                },
+                allow_direct_insert=True,          
+            )
